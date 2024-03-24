@@ -3,6 +3,7 @@ const path = require('path');
 const express = require('express');
 const socketio = require('socket.io');
 const Filter = require('bad-words');
+const { generateLocationMessage, generateTextMessage } = require('./utils/messages');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,9 +16,9 @@ app.use(express.static(publicDirectoryPath));
 
 // Socket connection is estabilished
 io.on('connection', (socket) => {
-  socket.emit('message', 'Welcome to Chat App !');
+  socket.emit('message', generateTextMessage('Welcome to Chat App !'));
 
-  socket.broadcast.emit('message', 'A new user has joined !');
+  socket.broadcast.emit('message', generateTextMessage('A new user has joined !'));
 
   // Listen to sendMessage event from client
   socket.on('sendMessage', (message, callback) => {
@@ -26,7 +27,7 @@ io.on('connection', (socket) => {
     if (filter.isProfane(message)) {
       return callback('Profanity not allowed');
     }
-    io.emit('message', message);
+    io.emit('message', generateTextMessage(message));
     callback();
   });
 
@@ -34,14 +35,16 @@ io.on('connection', (socket) => {
   socket.on('sendLocation', (location, callback) => {
     io.emit(
       'location',
-      `https://google.com/maps?q=${location.latitude},${location.longitude}`
+      generateLocationMessage(
+        `https://google.com/maps?q=${location.latitude},${location.longitude}`
+      )
     );
     callback();
   });
 
   // Listen to socket disconnect event
   socket.on('disconnect', () => {
-    io.emit('message', 'An user just left !');
+    io.emit('message', generateTextMessage('An user just left !'));
   });
 });
 

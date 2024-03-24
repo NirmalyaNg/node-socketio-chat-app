@@ -4,30 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chat App</title>
+    <link rel="icon" href="/img/favicon.png" />
+    <link rel="stylesheet" href="/css/styles.min.css" />
   </head>
   <body>
-    <h1>Chat App</h1>
-    <div id="messages"></div>
-    <form id="message-form">
-      <label for="message-input">Enter your message:</label><br />
-      <input type="text" id="message-input" /><br />
-      <button type="submit" id="message-submit-button">Send</button>
-      <button type="button" id="message-location-button">Send Location</button>
-    </form>
-    <script type="text/html" id="message-template">
-      <div>
-        <p>{{messageText}}</p>
+    <div class="centered-form">
+      <div class="centered-form__box">
+        <h1>Join</h1>
+        <form action="chat.html">
+          <label for="name">Display Name</label>
+          <input
+            type="text"
+            id="name"
+            name="username"
+            placeholder="Enter Display Name"
+            required />
+          <label for="room">Room</label>
+          <input type="text" id="room" name="room" placeholder="Enter Room Name" required />
+          <button type="submit">Join</button>
+        </form>
       </div>
-    </script>
-    <script type="text/html" id="location-template">
-      <div>
-        <p><a href="{{location}}" target="_blank">My current location</a></p>
-      </div>
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.12.0/qs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mustache@4.2.0/mustache.min.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="/js/chat.js"></script>
+    </div>
   </body>
 </html>
