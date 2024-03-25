@@ -4,6 +4,7 @@ const express = require('express');
 const socketio = require('socket.io');
 const Filter = require('bad-words');
 const { generateLocationMessage, generateTextMessage } = require('./utils/messages');
+const { addUser, removeUser, getUser, getUsersInRoom } = require('./utils/users');
 
 const app = express();
 const server = http.createServer(app);
@@ -16,26 +17,53 @@ app.use(express.static(publicDirectoryPath));
 
 // Socket connection is estabilished
 io.on('connection', (socket) => {
-  socket.emit('message', generateTextMessage('Welcome to Chat App !'));
+  // Listen to join event
+  socket.on('join', ({ username, room }, callback) => {
+    const { error, user } = addUser({ id: socket.id, username, room });
 
-  socket.broadcast.emit('message', generateTextMessage('A new user has joined !'));
+    if (error) {
+      return callback(error);
+    }
+
+    // Join the room
+    socket.join(user.room);
+
+    socket.emit(
+      'message',
+      generateTextMessage('Admin', `Welcome ${user.username} to the Chat App!`)
+    );
+    socket.broadcast
+      .to(user.room)
+      .emit('message', generateTextMessage('Admin', `${user.username} has joined !`));
+
+    // Emit event to all users in a room and provide data of all joined users to that room
+    const roomData = getUsersInRoom(user.room);
+    io.to(user.room).emit('roomData', {
+      room: user.room,
+      users: roomData,
+    });
+    callback();
+  });
 
   // Listen to sendMessage event from client
   socket.on('sendMessage', (message, callback) => {
     const filter = new Filter();
+    const user = getUser(socket.id);
 
     if (filter.isProfane(message)) {
       return callback('Profanity not allowed');
     }
-    io.emit('message', generateTextMessage(message));
+    io.to(user.room).emit('message', generateTextMessage(user.username, message));
     callback();
   });
 
   // Listen to sendLocation event from client
   socket.on('sendLocation', (location, callback) => {
-    io.emit(
+    const user = getUser(socket.id);
+    io.to(user.room).emit(
       'location',
       generateLocationMessage(
+        user.username,
         `https://google.com/maps?q=${location.latitude},${location.longitude}`
       )
     );
@@ -44,7 +72,18 @@ io.on('connection', (socket) => {
 
   // Listen to socket disconnect event
   socket.on('disconnect', () => {
-    io.emit('message', generateTextMessage('An user just left !'));
+    const user = removeUser(socket.id);
+    if (user) {
+      io.to(user.room).emit(
+        'message',
+        generateTextMessage('Admin', `${user.username} just left !`)
+      );
+
+      io.to(user.room).emit('roomData', {
+        room: user.room,
+        users: getUsersInRoom(user.room),
+      });
+    }
   });
 });
 

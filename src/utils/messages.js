@@ -1,12 +1,14 @@
-function generateTextMessage(text) {
+function generateTextMessage(username, text) {
   return {
+    username,
     text,
     createdAt: new Date().getTime(),
   };
 }
 
-function generateLocationMessage(url) {
+function generateLocationMessage(username, url) {
   return {
+    username,
     url,
     createdAt: new Date().getTime(),
   };
